@@ -335,7 +335,7 @@ zipAndFoldBasic' : (a,b:Byte) ->
                      =
                    15
 zipAndFoldBasic' a b f g =
-  rewrite zipAndFoldBasic
+     rewrite zipAndFoldBasic
             a b f g
   in refl
 

@@ -3,7 +3,8 @@ module Constant_Time_Functions
 -- The first thing we do is redefine the bit as either one or zero, and then
 --   define equality for it
 
-data Bit = One | Zero
+data Bit = One
+         | Zero
 
 instance Eq Bit where {
   (==) One One   = True
@@ -73,11 +74,11 @@ vFoldr1 f (x::xs) = foldr f x xs
 -- zipAndFold is just a useful composition of operations to zip two things
 --   together using a function and then fold another function across them
 
-zipAndFold : (a -> a -> a) ->
-             (a -> a -> a) ->
-             Vect (S n) a ->
-             Vect (S n) a ->
-             a
+zipAndFold : (a -> a -> a) -> -- Function to fold with
+             (a -> a -> a) -> -- Function to zip with
+             Vect (S n) a ->  -- Vector to zip together
+             Vect (S n) a ->  -- Vector to zip together
+             a                -- Result of folding across the zip of the above vectors
 zipAndFold f g a b = vFoldr1 f (Prelude.Vect.zipWith g a b)
 
 -- zipAndFold happens to let us write a handy byteEq function that's also
@@ -86,7 +87,7 @@ zipAndFold f g a b = vFoldr1 f (Prelude.Vect.zipWith g a b)
 
 byteEq : Byte ->
          Byte ->
-         Bit
+         Bit -- One of the vectors are equal, otherwise Zero
 byteEq a b = zipAndFold bitNXor bitAnd a b
 
 -- Now we get into the idea of using a tuple of (Bit, Nat) to represent both a
@@ -97,8 +98,8 @@ byteEq a b = zipAndFold bitNXor bitAnd a b
 --   took no operations to produce.  It should only really be used on variables
 --   passed into the function as parameters.
 
-initializeCount : Vect n a ->
-                  Vect n (a, Nat)
+initializeCount : Vect n a ->     -- Vector of something
+                  Vect n (a, Nat) -- Vector of (something, operation count)
 initializeCount []        = []
 initializeCount (x :: xs) = ((x, 0) :: initializeCount xs)
 
@@ -341,8 +342,11 @@ zipAndFoldBasic' a b f g =
 
 -- This says equality always takes 15 operations
 
-numericTimeConstancy : (a,b:Byte) -> snd (countingByteEq a b) = 15
-numericTimeConstancy a b =
+numericTimeConstancyOfEq : (a,b:Byte) ->
+                           snd (countingByteEq a b)
+                             =
+                           15
+numericTimeConstancyOfEq a b =
      rewrite zipAndFoldBasic'
                a b bitNXor bitAnd
   in refl
@@ -350,13 +354,29 @@ numericTimeConstancy a b =
 -- And thus equality between any two pairs of bytes takes the same amount of
 --   time.
 
-timeConstancy : (a,b,c,d:Byte) ->
-                snd (countingByteEq a b)
-                  =
-                snd (countingByteEq c d)
-timeConstancy a b c d =
+timeConstancyOfEq : (a,b,c,d:Byte) ->
+                    snd (countingByteEq a b)
+                      =
+                    snd (countingByteEq c d)
+timeConstancyOfEq a b c d =
      rewrite numericTimeConstancy
                a b
   in rewrite numericTimeConstancy
                c d
   in refl -- QED
+
+-- Now we implement the Montgomery Ladder to perform exponentiation in constant
+--   time.
+
+montgomeryLadder : Byte ->
+                   Byte ->
+                   Byte
+
+countingLadder : Byte ->
+                 Byte ->
+                 (Byte, Nat)
+
+timeConstancyOfLadder : (a,b,c,d:Byte) ->
+                        snd (countingLadder a b)
+                          =
+                        snd (countingLadder c d)

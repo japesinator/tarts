@@ -359,14 +359,38 @@ timeConstancyOfEq : (a,b,c,d:Byte) ->
                       =
                     snd (countingByteEq c d)
 timeConstancyOfEq a b c d =
-     rewrite numericTimeConstancy
+     rewrite numericTimeConstancyOfEq
                a b
-  in rewrite numericTimeConstancy
+  in rewrite numericTimeConstancyOfEq
                c d
   in refl -- QED
 
 -- Now we implement the Montgomery Ladder to perform exponentiation in constant
 --   time.
+
+
+-- This is just a left fold, useful for the left-going montgomery ladder
+--   algorithm
+--   FIXME: this is kind of a hack since reverse takes time
+vFoldl1 : (t -> t -> t) ->
+          Vect (S n) t ->
+          t
+vFoldl1 f v = vFoldr1 f (reverse v)
+
+downIter : Fin 8
+downIter = 1
+
+ladder : Nat ->
+         Nat ->
+         Fin 8 ->
+         Byte ->
+         Nat
+ladder r0 r1 count b = case ((==) count fZ) of
+                       True  => r0
+                       False => case (index count b) of
+                                One => (ladder (2 * r0)  (r0 + r1) (count - downIter) b)
+                                Zero => (ladder (r0 + r1) (2 * r1)  (count - downIter) b)
+
 
 montgomeryLadder : Byte ->
                    Byte ->

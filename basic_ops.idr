@@ -365,20 +365,27 @@ timeConstancyOfEq a b c d =
                c d
   in refl -- QED
 
--- Now we implement the Montgomery Ladder to perform exponentiation in constant
---   time.
+-- The above was mostly proof of concept, as in the x86 instruction set, which
+--   determines how long things take in real life, it's much simpler.
 
--- Step one is addition
+byteAnd : Byte ->
+          Byte ->
+          Byte
+byteAnd = zipWith bitAnd
 
-bitShiftR : Byte ->
+byteXor : Byte ->
+          Byte ->
+          Byte
+byteXor = zipWith bitXor
+
+bitShiftL : Byte ->
             Byte
 bitShift x :: xs = xs :: 0
 
 addBytes : Byte ->
            Byte ->
            Byte
-addBytes b1 b2 = zipWith bitXor (zipWith bitAnd b1 b2)
-                                (bitShiftR (zipWith bitXor b1 b2))
+addBytes b1 b2 = byteXor (byteAnd b1 b2) (bitShiftL (byteXor b1 b2))
 
 -- This is just a left fold, useful for the left-going montgomery ladder
 --   algorithm

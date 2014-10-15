@@ -368,64 +368,28 @@ timeConstancyOfEq a b c d =
 -- The above was mostly proof of concept, as in the x86 instruction set, which
 --   determines how long things take in real life, it's much simpler.
 
-byteAnd : Byte ->
-          Byte ->
-          Byte
-byteAnd = zipWith bitAnd
-
-byteXor : Byte ->
-          Byte ->
-          Byte
-byteXor = zipWith bitXor
-
-bitShiftL : Byte ->
-            Byte
-bitShift x :: xs = xs :: 0
-
-addBytes : Byte ->
-           Byte ->
-           Byte
-addBytes b1 b2 = byteXor (byteAnd b1 b2) (bitShiftL (byteXor b1 b2))
-
--- This is just a left fold, useful for the left-going montgomery ladder
---   algorithm
---   FIXME: this is kind of a hack since reverse takes time
-
-vFoldl1 : (t -> t -> t) ->
-          Vect (S n) t ->
-          t
-vFoldl1 f v = vFoldr1 f (reverse v)
-
 -- This is just a constant, but with type Fin 8 so idris doesn't whine at me
 
 downIter : Fin 8
 downIter = 1
 
 -- This is the actual ladder
---   FIXME: Use bytes instead of Nats
-ladder : Nat ->
-         Nat ->
-         Fin 8 ->
-         Byte ->
-         Nat
-ladder r0 r1 count b = case ((==) count fZ) of
-                       True  => r0
-                       False => case (index count b) of
-                                One  => (ladder (2 * r0)  (r0 + r1)
-                                        (count - downIter) b)
-                                Zero => (ladder (r0 + r1) (2 * r1)
-                                        (count - downIter) b)
 
+montgomeryLadder : (a,b: Nat) ->      -- Number, power to take it too
+                   (p : LTE a 255) -> -- Proof a is an 8-bit number
+                   (q : LTE b 255) -> -- Proof b is an 8-bit number
+                   Nat                -- Result
 
-montgomeryLadder : Byte ->
-                   Byte ->
-                   Byte
+countingLadder : (a,b: Nat) ->      -- Number, power to take it too
+                 (p : LTE a 255) -> -- Proof a is an 8-bit number
+                 (q : LTE b 255) -> -- Proof b is an 8-bit number
+                 (Nat, Nat)         -- Result
 
-countingLadder : Byte ->
-                 Byte ->
-                 (Byte, Nat)
-
-timeConstancyOfLadder : (a,b,c,d:Byte) ->
-                        snd (countingLadder a b)
+timeConstancyOfLadder : (a,b,c,d:Nat) ->
+                        (p : LTE a 255) ->
+                        (q : LTE b 255) ->
+                        (r : LTE c 255) ->
+                        (s : LTE d 255) ->
+                        snd (countingLadder a b p q)
                           =
-                        snd (countingLadder c d)
+                        snd (countingLadder c d r s)

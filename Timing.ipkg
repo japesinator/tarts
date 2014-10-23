@@ -1,6 +1,5 @@
 package timing
 
 sourcedir = src
-modules = Timing.Ladder,
-          Timing.Equality
+modules = Timing.Count
 opts = ""

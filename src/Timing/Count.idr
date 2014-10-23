@@ -12,4 +12,4 @@ instance Applicative Count where
   (f, n) <$> (a, m) = (f a, S (n + m))
 
 instance Monad Count where
-  (a, n) >>= f = (fst (f a), S n)
+  (a, n) >>= f = (fst (f a), S ((snd (f a)) + n))

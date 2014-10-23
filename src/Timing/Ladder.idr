@@ -47,7 +47,7 @@ countingLStep i e rs = case bitAtIndex i e of
                                            (\(x, y) => (x, x * y))) $
                                      mapSnd ((+) 3) rs -- `map` is weird here,
                                                        --   so we use 3 (`*` +
-                                                       --   `*` to case)
+                                                       --   `*` + `case`)
                             (S Z) => mapFst (the ((Nat, Nat) -> (Nat, Nat))
                                            (\(x, y) => (y * x, y))) $
                                      mapFst (the ((Nat, Nat) -> (Nat, Nat))

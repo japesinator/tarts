@@ -1,3 +1,6 @@
+module Timing.Count
+%default total
+
 Count : Type -> Type
 Count t = (t, Nat)
 

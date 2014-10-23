@@ -1,0 +1,6 @@
+package timing
+
+sourcedir = src
+modules = Timing.Ladder,
+          Timing.Equality
+opts = ""

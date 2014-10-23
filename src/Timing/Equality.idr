@@ -1,4 +1,4 @@
-module Constant_Time_Functions
+module Equality
 
 -- The first thing we do is redefine the bit as either one or zero, and then
 --   define equality for it
@@ -367,41 +367,3 @@ timeConstancyOfEq a b c d =
 
 -- The above was mostly proof of concept, as in the x86 instruction set, which
 --   determines how long things take in real life, it's much simpler.
-
--- This is the actual ladder
-
-ladderStep : (Nat, Nat) -> -- Intermediate values r0, r1
-             Nat ->        -- Number
-             Nat ->        -- Index
-             (Nat, Nat)    -- Intermediate values r0, r1 (updated)
-ladderStep (r0, r1) n i = if (<) n (pow i 2)
-                          then ( (pow r0 2), (r0 * r1)  )
-                          else ( (r0 * r1) , (pow r1 2) )
-
-iterateLadder : (Nat, Nat) -> -- Intermediate values
-                Nat ->        -- Number to take to the power
-                Nat ->        -- Index
-                Nat
-iterateLadder p n Z = fst (ladderStep p n Z)
-iterateLadder p n i = iterateLadder (ladderStep p n i) (n - (pow 2 i)) (i - 1)
-
-bitLength : Nat -> -- Number to take length of
-            Nat -> -- Initial guess
-            Nat    -- Number of bits in binary representation of n
-bitLength n g = if (<) n (pow 2 g)
-                then g
-                else bitLength n (g + 1)
-
-montgomeryLadder : Nat -> -- Number
-                   Nat -> -- Power to take it to
-                   Nat    -- Result
-montgomeryLadder n p = iterateLadder (1, n) p (bitLength p 1)
-
-countingLadder : Nat ->     -- Number
-                 Nat ->     -- Power to take it to
-                 (Nat, Nat) -- (Result, operations done)
-
-timeConstancyOfLadder : (a,b,c,d:Nat) ->
-                        snd (countingLadder a b)
-                          =
-                        snd (countingLadder c d)

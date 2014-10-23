@@ -40,16 +40,16 @@ countingLStep : Nat ->              -- We shouldn't need a count on the index
                 Count (Nat, Nat) -> -- We just store the opcount in the intermediate
                                     --   variables
                 Count (Nat, Nat)    -- We carry the count forward
-countingLStep i e rs = case bitAtIndex i e of
-                            Z     => mapFst (the ((Nat, Nat) -> (Nat, Nat))
-                                           (\(x, y) => (x * x, y))) $
-                                     mapFst (the ((Nat, Nat) -> (Nat, Nat))
-                                           (\(x, y) => (x, x * y))) $
-                                     mapSnd ((+) 3) rs -- `map` is weird here,
-                                                       --   so we use 3 (`*` +
-                                                       --   `*` + `case`)
-                            (S Z) => mapFst (the ((Nat, Nat) -> (Nat, Nat))
-                                           (\(x, y) => (y * x, y))) $
-                                     mapFst (the ((Nat, Nat) -> (Nat, Nat))
-                                           (\(x, y) => (x, y * y))) $
-                                     mapSnd ((+) 3) rs
+countingLStep i e = case bitAtIndex i e of
+                         Z     => mapFst (the ((Nat, Nat) -> (Nat, Nat))
+                                        (\(x, y) => (x * x, y))) .
+                                  mapFst (the ((Nat, Nat) -> (Nat, Nat))
+                                        (\(x, y) => (x, x * y))) .
+                                  mapSnd ((+) 3) -- `map` is weird here, so
+                                                 --   we use 3 (`*` + `*` +
+                                                 --   `case`)
+                         (S Z) => mapFst (the ((Nat, Nat) -> (Nat, Nat))
+                                        (\(x, y) => (y * x, y))) .
+                                  mapFst (the ((Nat, Nat) -> (Nat, Nat))
+                                        (\(x, y) => (x, y * y))) .
+                                  mapSnd ((+) 3)

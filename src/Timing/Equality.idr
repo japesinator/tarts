@@ -146,11 +146,11 @@ zipOps : (a,b:Vect n c) ->
            =
          True
 zipOps []        []        f =
-     refl
+     Refl
 zipOps (x :: xs) (y :: ys) f =
      rewrite zipOps
                xs ys f
-  in refl
+  in Refl
 
 -- This is just the above function for specifically bytes
 -- FIXME: this doesn't need to exist
@@ -166,7 +166,7 @@ zipBytes : (a,b:Byte) ->
 zipBytes a b f =
      rewrite zipOps
                a b f
-  in refl
+  in Refl
 
 -- This is just the definition of addcount, namely operating on two things will
 --   return a thing with an operation count of the sum of theirs plus one.
@@ -177,7 +177,7 @@ addCountBasic : (f:c -> c -> c) ->
                   =
                 (snd a + snd b) + 1
 addCountBasic f (a,n) (b,m) =
-     refl
+     Refl
 
 -- This is where things get ugly.  Idris doesn't really like proving things
 --   about generalized folds, so I just wrote one huge proof for only 8-element
@@ -256,7 +256,7 @@ addEightThings a b c d e f g h =
   in rewrite plusCommutative
                (plus a (plus b (plus c (plus d (plus e (plus f (plus g h)))))))
                    7
-  in refl
+  in Refl
    -- FIXME: dear god I am sorry for the above
 
 -- This states that folding an operation across a vector will perform seven
@@ -289,7 +289,7 @@ foldrByteBasic [a,b,c,d,e,f,g,h] i =
                i h a
   in rewrite addEightThings
                (snd a) (snd b) (snd c) (snd d) (snd e) (snd f) (snd g) (snd h)
-  in refl
+  in Refl
 
 -- This is a specific case of the above where each element has only had one op
 --   performed to yield it, so the sum of the operations on the result is always
@@ -308,7 +308,7 @@ foldrHomoByte : (a:Vect 8 (Bit,Nat)) ->
 --   combinatorial explosion.
 -- FIXME: make this work
 -- foldrHomoByte [(a,(S Z)),(b,(S Z)),(c,(S Z)),(d,(S Z)),(e,(S Z)),(f,(S Z)),
---               (g,(S Z)),(h,(S Z))] i p = refl
+--               (g,(S Z)),(h,(S Z))] i p = Refl
 foldrHomoByte a f = believe_me
 
 -- This and the below proof both just say that if you zip two vectors togeter
@@ -325,7 +325,7 @@ zipAndFoldBasic a b f g =
   rewrite foldrHomoByte
             (zipWith (addCount g) (initializeCount a) (initializeCount b)) f
                 (zipBytes a b g)
-  in refl
+  in Refl
 
 zipAndFoldBasic' : (a,b:Byte) ->
                    (f,g:Bit -> Bit -> Bit) ->
@@ -338,7 +338,7 @@ zipAndFoldBasic' : (a,b:Byte) ->
 zipAndFoldBasic' a b f g =
      rewrite zipAndFoldBasic
             a b f g
-  in refl
+  in Refl
 
 -- This says equality always takes 15 operations
 
@@ -349,7 +349,7 @@ numericTimeConstancyOfEq : (a,b:Byte) ->
 numericTimeConstancyOfEq a b =
      rewrite zipAndFoldBasic'
                a b bitNXor bitAnd
-  in refl
+  in Refl
 
 -- And thus equality between any two pairs of bytes takes the same amount of
 --   time.
@@ -363,7 +363,7 @@ timeConstancyOfEq a b c d =
                a b
   in rewrite numericTimeConstancyOfEq
                c d
-  in refl -- QED
+  in Refl -- QED
 
 -- The above was mostly proof of concept, as in the x86 instruction set, which
 --   determines how long things take in real life, it's much simpler.

@@ -7,3 +7,5 @@ Note:
 -----
 
 Everything is fairly broken right now as this is still really early pre-alpha
+
+Accepted for presentation at THOTCON 2015!

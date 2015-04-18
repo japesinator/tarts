@@ -1,5 +1,0 @@
-package timing
-
-sourcedir = src
-modules = Timing.Count
-opts = ""

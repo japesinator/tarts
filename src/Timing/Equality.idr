@@ -1,5 +1,7 @@
 module Equality
 
+import Data.Vect
+
 -- The first thing we do is redefine the bit as either one or zero, and then
 --   define equality for it
 
@@ -79,7 +81,7 @@ zipAndFold : (a -> a -> a) -> -- Function to fold with
              Vect (S n) a ->  -- Vector to zip together
              Vect (S n) a ->  -- Vector to zip together
              a                -- Result of folding across the zip of the above vectors
-zipAndFold f g a b = vFoldr1 f (Prelude.Vect.zipWith g a b)
+zipAndFold f g a b = vFoldr1 f zipWith g a b
 
 -- zipAndFold happens to let us write a handy byteEq function that's also
 --   time constant.  We don't actually use this one, it's just easier to think

@@ -81,7 +81,7 @@ zipAndFold : (a -> a -> a) -> -- Function to fold with
              Vect (S n) a ->  -- Vector to zip together
              Vect (S n) a ->  -- Vector to zip together
              a                -- Result of folding across the zip of the above vectors
-zipAndFold f g a b = vFoldr1 f zipWith g a b
+zipAndFold f g a b = vFoldr1 f $ zipWith g a b
 
 -- zipAndFold happens to let us write a handy byteEq function that's also
 --   time constant.  We don't actually use this one, it's just easier to think
@@ -90,7 +90,7 @@ zipAndFold f g a b = vFoldr1 f zipWith g a b
 byteEq : Byte ->
          Byte ->
          Bit -- One of the vectors are equal, otherwise Zero
-byteEq a b = zipAndFold bitNXor bitAnd a b
+byteEq = zipAndFold bitNXor bitAnd
 
 -- Now we get into the idea of using a tuple of (Bit, Nat) to represent both a
 --   bit and the number of operations done to produce it.
@@ -103,7 +103,7 @@ byteEq a b = zipAndFold bitNXor bitAnd a b
 initializeCount : Vect n a ->     -- Vector of something
                   Vect n (a, Nat) -- Vector of (something, operation count)
 initializeCount []        = []
-initializeCount (x :: xs) = ((x, 0) :: initializeCount xs)
+initializeCount (x :: xs) = (x, 0) :: initializeCount xs
 
 -- This takes a function and makes it a function that counts operations.
 --   Really, this should be a monadic bind.
@@ -119,10 +119,10 @@ addCount f (a, n) (b, m) = (f a b, n + m + 1)
 countingByteEq : Byte ->
                  Byte ->
                  (Bit, Nat)
-countingByteEq a b = (zipAndFold (addCount bitNXor)
-                                 (addCount bitAnd)
-                                 (initializeCount a)
-                                 (initializeCount b))
+countingByteEq a b = zipAndFold (addCount bitNXor)
+                                (addCount bitAnd)
+                                (initializeCount a)
+                                (initializeCount b)
 
 -- Now, we use idris' theorem prover to show that our function is time-
 --   -constant.
@@ -165,10 +165,7 @@ zipBytes : (a,b:Byte) ->
                        (S Z)
              =
            True
-zipBytes a b f =
-     rewrite zipOps
-               a b f
-  in Refl
+zipBytes a b f = rewrite zipOps a b f in Refl
 
 -- This is just the definition of addcount, namely operating on two things will
 --   return a thing with an operation count of the sum of theirs plus one.
@@ -178,8 +175,7 @@ addCountBasic : (f:c -> c -> c) ->
                 snd ((addCount f) a b)
                   =
                 (snd a + snd b) + 1
-addCountBasic f (a,n) (b,m) =
-     Refl
+addCountBasic f (a,n) (b,m) = Refl
 
 -- This is where things get ugly.  Idris doesn't really like proving things
 --   about generalized folds, so I just wrote one huge proof for only 8-element
@@ -189,7 +185,7 @@ addCountBasic f (a,n) (b,m) =
 -- This is literally just a specific case of the commutative/associative
 --   property of addition
 
-addEightThings : (a,b,c,d,e,f,g,h:Nat) -> 
+addEightThings : (a,b,c,d,e,f,g,h:Nat) ->
                  plus (plus (b) (plus (plus (c) (plus (plus (d) (plus (plus (e)
                       (plus (plus (f) (plus (plus (g) (plus (plus (h) (a)) 1))
                       1)) 1)) 1)) 1)) 1)) 1
@@ -310,7 +306,7 @@ foldrHomoByte : (a:Vect 8 (Bit,Nat)) ->
 --   combinatorial explosion.
 -- FIXME: make this work
 -- foldrHomoByte [(a,(S Z)),(b,(S Z)),(c,(S Z)),(d,(S Z)),(e,(S Z)),(f,(S Z)),
---               (g,(S Z)),(h,(S Z))] i p = Refl
+--                (g,(S Z)),(h,(S Z))] i p = Refl
 foldrHomoByte a f = believe_me
 
 -- This and the below proof both just say that if you zip two vectors togeter

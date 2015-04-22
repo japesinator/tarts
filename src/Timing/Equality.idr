@@ -22,6 +22,11 @@ Byte = Vect 8 Bit
 -- It's also going to be useful to define the basic Boolean operators on our new
 --   bits
 
+bitNot : Bit ->
+         Bit
+bitNot One  = Zero
+bitNot Zero = One
+
 bitAnd : Bit ->
          Bit ->
          Bit
@@ -31,8 +36,7 @@ bitAnd _   _   = Zero
 bitNand : Bit ->
           Bit ->
           Bit
-bitNand One One = Zero
-bitNand _   _   = One
+bitNand a b = bitNot $ bitAnd a b
 
 bitOr : Bit ->
         Bit ->
@@ -43,8 +47,7 @@ bitOr _    _    = One
 bitNor : Bit ->
          Bit ->
          Bit
-bitNor Zero Zero = One
-bitNor _    _    = Zero
+bitNor a b = bitNot $ bitOr a b
 
 bitXor : Bit ->
          Bit ->
@@ -56,22 +59,7 @@ bitXor _    _    = One
 bitNXor : Bit ->
           Bit ->
           Bit
-bitNXor One  One  = One
-bitNXor Zero Zero = One
-bitNXor _    _    = Zero
-
-bitNot : Bit ->
-         Bit
-bitNot One  = Zero
-bitNot Zero = One
-
--- For some reason foldr1 was not working for me so I quickly rewrote it
--- FIXME: use the real foldr1
-
-vFoldr1 : (t -> t -> t) ->
-          Vect (S n) t ->
-          t
-vFoldr1 f (x::xs) = foldr f x xs
+bitNXor a b = bitNot $ bitXor a b
 
 -- zipAndFold is just a useful composition of operations to zip two things
 --   together using a function and then fold another function across them
@@ -81,7 +69,7 @@ zipAndFold : (a -> a -> a) -> -- Function to fold with
              Vect (S n) a ->  -- Vector to zip together
              Vect (S n) a ->  -- Vector to zip together
              a                -- Result of folding across the zip of the above vectors
-zipAndFold f g a b = vFoldr1 f $ zipWith g a b
+zipAndFold f g a b = foldr1 f $ zipWith g a b
 
 -- zipAndFold happens to let us write a handy byteEq function that's also
 --   time constant.  We don't actually use this one, it's just easier to think
@@ -94,7 +82,6 @@ byteEq = zipAndFold bitNXor bitAnd
 
 -- Now we get into the idea of using a tuple of (Bit, Nat) to represent both a
 --   bit and the number of operations done to produce it.
--- FIXME: this should be a monad
 
 -- This is a tool that lets us start counting on a Vector by saying each bit
 --   took no operations to produce.  It should only really be used on variables
@@ -134,7 +121,7 @@ allHasCount : Vect n (a, Nat) ->
               Nat ->
               Bool
 allHasCount []             n = True
-allHasCount ((a, b) :: xs) n = b == n && allHasCount xs n
+allHasCount ((_, a) :: xs) n = a == n && allHasCount xs n
 
 -- This says that zipping two new vectors together should return a vector of
 --   items that all have had one operation performed on them.
@@ -143,29 +130,12 @@ zipOps : (a,b:Vect n c) ->
          (f:c -> c -> c) ->
          allHasCount (zipWith (addCount f)
                               (initializeCount a)
-                              (initializeCount b))
-                     1
+                              (initializeCount b)) 1
            =
          True
 zipOps []        []        f =
      Refl
-zipOps (x :: xs) (y :: ys) f =
-     rewrite zipOps
-               xs ys f
-  in Refl
-
--- This is just the above function for specifically bytes
--- FIXME: this doesn't need to exist
-
-zipBytes : (a,b:Byte) ->
-           (f:Bit -> Bit -> Bit) ->
-           allHasCount (zipWith (addCount f)
-                                (initializeCount a)
-                                (initializeCount b))
-                       (S Z)
-             =
-           True
-zipBytes a b f = rewrite zipOps a b f in Refl
+zipOps (x :: xs) (y :: ys) f = rewrite zipOps xs ys f in Refl
 
 -- This is just the definition of addcount, namely operating on two things will
 --   return a thing with an operation count of the sum of theirs plus one.
@@ -186,45 +156,46 @@ addCountBasic f (a,n) (b,m) = Refl
 --   property of addition
 
 addEightThings : (a,b,c,d,e,f,g,h:Nat) ->
-                 plus (plus (b) (plus (plus (c) (plus (plus (d) (plus (plus (e)
-                      (plus (plus (f) (plus (plus (g) (plus (plus (h) (a)) 1))
-                      1)) 1)) 1)) 1)) 1)) 1
+                 plus (plus b $ plus (plus c $ plus (plus d $ plus (plus e
+                      $ plus (plus f $ plus (plus g $ plus (plus h a)
+                      1) 1) 1) 1) 1) 1) 1
                    =
-                 plus (plus (a) (plus (b) (plus (c) (plus (d) (plus (e) (plus
-                      (f) (plus (g) (plus (h) 0)))))))) (fromInteger 7)
+                  plus (plus a $ plus b $ plus c $ plus d $ plus e $ plus f
+                       $ plus g $ plus h 0) (fromInteger 7)
 addEightThings a b c d e f g h =
      rewrite
              plusZeroRightNeutral h
   in rewrite plusCommutative
                (plus h a) 1
   in rewrite plusCommutative
-               g (S (plus h a))
+               g (S $ plus h a)
   in rewrite plusCommutative
-               (S (plus (plus h a) g)) 1
+               (S $ plus (plus h a) g) 1
   in rewrite plusCommutative
-               f (S (S (plus (plus h a) g)))
+               f (S $ S $ plus (plus h a) g)
   in rewrite plusCommutative
-               (plus (S (S (plus (plus h a) g))) f) 1
+               (plus (S $ S $ plus (plus h a) g) f) 1
   in rewrite plusCommutative
-               e (S (S (S (plus (plus (plus h a) g) f))))
+               e (S $ S $ S $ plus (plus (plus h a) g) f)
   in rewrite plusCommutative
-               (plus (S (S (S (plus (plus (plus h a) g) f)))) e) 1
+               (plus (S $ S $ S $ plus (plus (plus h a) g) f) e) 1
   in rewrite plusCommutative
-               d (S (S (S (S (plus (plus (plus (plus h a) g) f) e)))))
+               d (S $ S $ S $ S $ plus (plus (plus (plus h a) g) f) e)
   in rewrite plusCommutative
-               (plus (S (S (S (S (plus (plus (plus (plus h a) g) f) e))))) d) 1
+               (plus (S $ S $ S $ S $ plus (plus (plus (plus h a) g) f) e) d) 1
   in rewrite plusCommutative
-               c (S (S (S (S (S (plus (plus (plus (plus (plus h a) g) f) e)
-                   d))))))
+               c (S $ S $ S $ S $ S
+                 $ plus (plus (plus (plus (plus h a) g) f) e) d)
   in rewrite plusCommutative
-               (plus (S (S (S (S (S (plus (plus (plus (plus (plus h a) g) f) e)
-                   d)))))) c) 1
+               (plus (S $ S $ S $ S $ S
+                     $ plus (plus (plus (plus (plus h a) g) f) e) d) c) 1
   in rewrite plusCommutative
-               b (S (S (S (S (S (S (plus (plus (plus (plus (plus (plus h a) g)
-                   f) e) d) c)))))))
+               b (S $ S $ S $ S $ S $ S
+                 $ plus (plus (plus (plus (plus (plus h a) g) f) e) d) c)
   in rewrite plusCommutative
-               (plus (S (S (S (S (S (S (plus (plus (plus (plus (plus (plus h a)
-                   g) f) e) d) c))))))) b) 1
+               (plus (S $ S $ S $ S $ S $ S
+                     $ plus (plus (plus (plus (plus (plus h a) g) f) e) d) c) b)
+                     1
   in rewrite plusCommutative
                (plus h a) g
   in rewrite plusAssociative
@@ -234,26 +205,26 @@ addEightThings a b c d e f g h =
   in rewrite plusAssociative
                f (plus g h) a
   in rewrite plusCommutative
-               (plus (plus f (plus g h)) a) e
+               (plus (plus f $ plus g h) a) e
   in rewrite plusAssociative
-               e (plus f (plus g h)) a
+               e (plus f $ plus g h) a
   in rewrite plusCommutative
-               (plus (plus e (plus f (plus g h))) a) d
+               (plus (plus e $ plus f $ plus g h) a) d
   in rewrite plusAssociative
-               d (plus e (plus f (plus g h))) a
+               d (plus e $ plus f $ plus g h) a
   in rewrite plusCommutative
-               (plus (plus d (plus e (plus f (plus g h)))) a) c
+               (plus (plus d $ plus e $ plus f $ plus g h) a) c
   in rewrite plusAssociative
-               c (plus d (plus e (plus f (plus g h)))) a
+               c (plus d $ plus e $ plus f $ plus g h) a
   in rewrite plusCommutative
-               (plus (plus c (plus d (plus e (plus f (plus g h))))) a) b
+               (plus (plus c $ plus d $ plus e $ plus f $ plus g h) a) b
   in rewrite plusAssociative
-               b (plus c (plus d (plus e (plus f (plus g h))))) a
+               b (plus c $ plus d $ plus e $ plus f $ plus g h) a
   in rewrite plusCommutative
-               (plus b (plus c (plus d (plus e (plus f (plus g h)))))) a
+               (plus b $ plus c $ plus d $ plus e $ plus f $ plus g h) a
   in rewrite plusCommutative
-               (plus a (plus b (plus c (plus d (plus e (plus f (plus g h)))))))
-                   7
+               (plus a $ plus b $ plus c $ plus d $ plus e $ plus f $ plus g h)
+               7
   in Refl
    -- FIXME: dear god I am sorry for the above
 
@@ -265,24 +236,22 @@ addEightThings a b c d e f g h =
 
 foldrByteBasic : (a:Vect 8 (Bit, Nat)) ->
                  (f:Bit -> Bit -> Bit) ->
-                 snd (vFoldr1 (addCount f) a)
+                 snd (foldr1 (addCount f) a)
                    =
                  sum (map snd a) + 7
-foldrByteBasic [a,b,c,d,e,f,g,h] i =
+foldrByteBasic [a,b,c,d,e,f,g,h] i = let ai = addCount i in
      rewrite addCountBasic
-               i b (addCount i c (addCount i d (addCount i e (addCount i f
-                   (addCount i g (addCount i h a))))))
+               i b $ ai c $ ai d $ ai e $ ai f $ ai g $ ai h a
   in rewrite addCountBasic
-               i c (addCount i d (addCount i e (addCount i f (addCount i g
-                   (addCount i h a)))))
+               i c $ ai d $ ai e $ ai f $ ai g $ ai h a
   in rewrite addCountBasic
-               i d (addCount i e (addCount i f (addCount i g (addCount i h a))))
+               i d $ ai e $ ai f $ ai g (ai h a)
   in rewrite addCountBasic
-               i e (addCount i f (addCount i g (addCount i h a)))
+               i e $ ai f $ ai g $ ai h a
   in rewrite addCountBasic
-               i f (addCount i g (addCount i h a))
+               i f $ ai g $ ai h a
   in rewrite addCountBasic
-               i g (addCount i h a)
+               i g $ ai h a
   in rewrite addCountBasic
                i h a
   in rewrite addEightThings
@@ -298,7 +267,7 @@ foldrHomoByte : (a:Vect 8 (Bit,Nat)) ->
                 (p:allHasCount a (S Z)
                   =
                 True) ->
-                snd (vFoldr1 (addCount f) a)
+                snd (foldr1 (addCount f) a)
                   =
                 15
 -- The below proof is definitely true, but at the moment type-checking it could
@@ -309,33 +278,19 @@ foldrHomoByte : (a:Vect 8 (Bit,Nat)) ->
 --                (g,(S Z)),(h,(S Z))] i p = Refl
 foldrHomoByte a f = believe_me
 
--- This and the below proof both just say that if you zip two vectors togeter
---   and then fold across them, (and they're both size 8) then 15 operations
---   will be performed.
-zipAndFoldBasic : (a,b:Byte) ->
-                  (f,g:Bit -> Bit -> Bit) ->
-                  snd (vFoldr1 (addCount f) (zipWith (addCount g)
-                                            (initializeCount a)
-                                            (initializeCount b)))
-                    =
-                  15
-zipAndFoldBasic a b f g =
+-- This just says that if you zip two vectors togeter and then fold across them,
+--   (and they're both size 8) then 15 operations will be performed.
+zfBasic : (a,b:Byte) ->
+          (f,g:Bit -> Bit -> Bit) ->
+          snd $ foldr1 (addCount f) $ zipWith (addCount g)
+                                              (initializeCount a)
+                                              (initializeCount b)
+            =
+          15
+zfBasic a b f g =
   rewrite foldrHomoByte
             (zipWith (addCount g) (initializeCount a) (initializeCount b)) f
-                (zipBytes a b g)
-  in Refl
-
-zipAndFoldBasic' : (a,b:Byte) ->
-                   (f,g:Bit -> Bit -> Bit) ->
-                   snd (zipAndFold (addCount f)
-                                   (addCount g)
-                                   (initializeCount a)
-                                   (initializeCount b))
-                     =
-                   15
-zipAndFoldBasic' a b f g =
-     rewrite zipAndFoldBasic
-            a b f g
+                (zipOps a b g)
   in Refl
 
 -- This says equality always takes 15 operations
@@ -344,10 +299,7 @@ numericTimeConstancyOfEq : (a,b:Byte) ->
                            snd (countingByteEq a b)
                              =
                            15
-numericTimeConstancyOfEq a b =
-     rewrite zipAndFoldBasic'
-               a b bitNXor bitAnd
-  in Refl
+numericTimeConstancyOfEq a b = rewrite zfBasic a b bitNXor bitAnd in Refl
 
 -- And thus equality between any two pairs of bytes takes the same amount of
 --   time.
@@ -357,10 +309,8 @@ timeConstancyOfEq : (a,b,c,d:Byte) ->
                       =
                     snd (countingByteEq c d)
 timeConstancyOfEq a b c d =
-     rewrite numericTimeConstancyOfEq
-               a b
-  in rewrite numericTimeConstancyOfEq
-               c d
+     rewrite numericTimeConstancyOfEq a b
+  in rewrite numericTimeConstancyOfEq c d
   in Refl -- QED
 
 -- The above was mostly proof of concept, as in the x86 instruction set, which

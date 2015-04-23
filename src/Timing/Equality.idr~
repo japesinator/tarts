@@ -125,19 +125,20 @@ allHasCount ((_, a) :: xs) n = a == n && allHasCount xs n
 -- This says that zipping two new vectors together should return a vector of
 --   items that all have had one operation performed on them.
 
-zipOps : (a, b : Vect n c) ->
-         (f : c -> c -> c) ->
+zipOps : (a,b:Vect n c) ->
+         (f:c -> c -> c) ->
          allHasCount (zipWith (addCount f)
                               (initializeCount a)
-                              (initializeCount b)) 1 = True
-zipOps []        []        = \_ => Refl
-zipOps (x :: xs) (y :: ys) = zipOps xs ys
+                              (initializeCount b)) 1
+         = True
+zipOps []        []        _ = Refl
+zipOps (x :: xs) (y :: ys) f = zipOps xs ys f
 
 -- This is just the definition of addcount, namely operating on two things will
 --   return a thing with an operation count of the sum of theirs plus one.
 
-addCountBasic : (f : c -> c -> c) ->
-                (a, b : (c, Nat)) ->
+addCountBasic : (f:c -> c -> c) ->
+                (a,b:(c, Nat)) ->
                 snd $ (addCount f) a b = snd a + snd b + 1
 addCountBasic _ (_, n) (_, m) = Refl
 
@@ -149,7 +150,7 @@ addCountBasic _ (_, n) (_, m) = Refl
 -- This is literally just a specific case of the commutative/associative
 --   property of addition
 
-addEightThings : (a, b, c, d, e, f, g, h : Nat) ->
+addEightThings : (a,b,c,d,e,f,g,h:Nat) ->
                  plus (plus b $ plus (plus c $ plus (plus d $ plus (plus e
                       $ plus (plus f $ plus (plus g $ plus (plus h a)
                       1) 1) 1) 1) 1) 1) 1
@@ -190,23 +191,23 @@ addEightThings a b c d e f g h =
   in rewrite plusAssociative
                g h a
   in rewrite plusCommutative
-               (plus(plus g h) a) f
+               (plus (plus g h) a) f
   in rewrite plusAssociative
                f (plus g h) a
   in rewrite plusCommutative
-               (plus(plus f $ plus g h) a) e
+               (plus (plus f $ plus g h) a) e
   in rewrite plusAssociative
                e (plus f $ plus g h) a
   in rewrite plusCommutative
-               (plus(plus e $ plus f $ plus g h) a) d
+               (plus (plus e $ plus f $ plus g h) a) d
   in rewrite plusAssociative
                d (plus e $ plus f $ plus g h) a
   in rewrite plusCommutative
-               (plus(plus d $ plus e $ plus f $ plus g h) a) c
+               (plus (plus d $ plus e $ plus f $ plus g h) a) c
   in rewrite plusAssociative
                c (plus d $ plus e $ plus f $ plus g h) a
   in rewrite plusCommutative
-               (plus(plus c $ plus d $ plus e $ plus f $ plus g h) a) b
+               (plus (plus c $ plus d $ plus e $ plus f $ plus g h) a) b
   in rewrite plusAssociative
                b (plus c $ plus d $ plus e $ plus f $ plus g h) a
   in rewrite plusCommutative
@@ -223,8 +224,8 @@ addEightThings a b c d e f g h =
 --   items that go into it (all the items in the vector) plus seven.
 -- FIXME: this proof is kind of a mess
 
-foldrByteBasic : (a : Vect 8 (Bit, Nat)) ->
-                 (f : Bit -> Bit -> Bit) ->
+foldrByteBasic : (a:Vect 8 (Bit, Nat)) ->
+                 (f:Bit -> Bit -> Bit) ->
                  snd $ foldr1 (addCount f) a = sum (map snd a) + 7
 foldrByteBasic [a,b,c,d,e,f,g,h] fn =
   let af = addCount fn
@@ -243,43 +244,44 @@ foldrByteBasic [a,b,c,d,e,f,g,h] fn =
 --   performed to yield it, so the sum of the operations on the result is always
 --   15.
 
-foldrHomoByte : (a : Vect 8 (Bit, Nat)) ->
-                (f : Bit -> Bit -> Bit) ->
-                (p : allHasCount a (S Z) = True) ->
+foldrHomoByte : (a:Vect 8 (Bit,Nat)) ->
+                (f:Bit -> Bit -> Bit) ->
+                (p:allHasCount a (S Z) = True) ->
                 snd $ foldr1 (addCount f) a = 15
 -- The below proof is definitely true, but at the moment type-checking it could
 --   quite possibly take a bit longer than the age of the universe. Thanks
 --   combinatorial explosion.
--- foldrHomoByte [(_,(S Z)),(_,(S Z)),(_,(S Z)),(_,(S Z)),(_,(S Z)),(_,(S Z)),
---                (_,(S Z)),(_,(S Z))] i p = Refl
-foldrHomoByte = \_,_ => believe_me
+-- FIXME: make this work
+-- foldrHomoByte [(a,(S Z)),(b,(S Z)),(c,(S Z)),(d,(S Z)),(e,(S Z)),(f,(S Z)),
+--                (g,(S Z)),(h,(S Z))] i p = Refl
+foldrHomoByte _ _ = believe_me
 
 -- This just says that if you zip two vectors togeter and then fold across them,
 --   (and they're both size 8) then 15 operations will be performed.
-zfBasic : (f, g : Bit -> Bit -> Bit) ->
-          (a, b : Byte) ->
+zfBasic : (f,g:Bit -> Bit -> Bit) ->
+          (a,b:Byte) ->
           snd $ foldr1 (addCount f) $ zipWith (addCount g)
                                               (initializeCount a)
-                                              (initializeCount b) = 15
+                                              (initializeCount b)
+          = 15
 zfBasic f g a b = foldrHomoByte (zipWith (addCount g)
                                          (initializeCount a)
                                          (initializeCount b)) f (zipOps a b g)
 
 -- This says equality always takes 15 operations
 
-numericTimeConstancyOfEq : (a, b : Byte) ->
-                           snd $ countingByteEq a b = 15
+numericTimeConstancyOfEq : (a,b:Byte) ->
+                           snd (countingByteEq a b)
+                             =
+                           15
 numericTimeConstancyOfEq = zfBasic bitNXor bitAnd
 
 -- And thus equality between any two pairs of bytes takes the same amount of
 --   time.
 
-timeConstancyOfEq : (a, b, c, d : Byte) ->
+timeConstancyOfEq : (a,b,c,d:Byte) ->
                     snd $ countingByteEq a b = snd $ countingByteEq c d
-timeConstancyOfEq a b c d =
-     rewrite numericTimeConstancyOfEq a b
-  in rewrite numericTimeConstancyOfEq c d
-  in Refl -- QED
+timeConstancyOfEq a b c d = ?rhs1
 
 -- The above was mostly proof of concept, as in the x86 instruction set, which
 --   determines how long things take in real life, it's much simpler.

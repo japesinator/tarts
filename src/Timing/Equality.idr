@@ -93,7 +93,6 @@ initializeCount []        = []
 initializeCount (x :: xs) = (x, 0) :: initializeCount xs
 
 -- This takes a function and makes it a function that counts operations.
---   Really, this should be a monadic bind.
 
 addCount : (a -> a -> a) ->
            (a, Nat) ->
@@ -133,8 +132,7 @@ zipOps : (a,b:Vect n c) ->
                               (initializeCount b)) 1
            =
          True
-zipOps []        []        f =
-     Refl
+zipOps []        []        _ = Refl
 zipOps (x :: xs) (y :: ys) f = rewrite zipOps xs ys f in Refl
 
 -- This is just the definition of addcount, namely operating on two things will
@@ -142,10 +140,8 @@ zipOps (x :: xs) (y :: ys) f = rewrite zipOps xs ys f in Refl
 
 addCountBasic : (f:c -> c -> c) ->
                 (a,b:(c, Nat)) ->
-                snd ((addCount f) a b)
-                  =
-                (snd a + snd b) + 1
-addCountBasic f (a,n) (b,m) = Refl
+                snd $ (addCount f) a b = snd a + snd b + 1
+addCountBasic _ (_, n) (_, m) = Refl
 
 -- This is where things get ugly.  Idris doesn't really like proving things
 --   about generalized folds, so I just wrote one huge proof for only 8-element
@@ -159,9 +155,8 @@ addEightThings : (a,b,c,d,e,f,g,h:Nat) ->
                  plus (plus b $ plus (plus c $ plus (plus d $ plus (plus e
                       $ plus (plus f $ plus (plus g $ plus (plus h a)
                       1) 1) 1) 1) 1) 1) 1
-                   =
-                  plus (plus a $ plus b $ plus c $ plus d $ plus e $ plus f
-                       $ plus g $ plus h 0) (fromInteger 7)
+                 = plus (plus a $ plus b $ plus c $ plus d $ plus e $ plus f
+                        $ plus g $ plus h 0) (fromInteger 7)
 addEightThings a b c d e f g h =
      rewrite
              plusZeroRightNeutral h
@@ -236,16 +231,14 @@ addEightThings a b c d e f g h =
 
 foldrByteBasic : (a:Vect 8 (Bit, Nat)) ->
                  (f:Bit -> Bit -> Bit) ->
-                 snd (foldr1 (addCount f) a)
-                   =
-                 sum (map snd a) + 7
+                 snd $ foldr1 (addCount f) a = sum (map snd a) + 7
 foldrByteBasic [a,b,c,d,e,f,g,h] i = let ai = addCount i in
      rewrite addCountBasic
                i b $ ai c $ ai d $ ai e $ ai f $ ai g $ ai h a
   in rewrite addCountBasic
                i c $ ai d $ ai e $ ai f $ ai g $ ai h a
   in rewrite addCountBasic
-               i d $ ai e $ ai f $ ai g (ai h a)
+               i d $ ai e $ ai f $ ai g $ ai h a
   in rewrite addCountBasic
                i e $ ai f $ ai g $ ai h a
   in rewrite addCountBasic
@@ -264,19 +257,15 @@ foldrByteBasic [a,b,c,d,e,f,g,h] i = let ai = addCount i in
 
 foldrHomoByte : (a:Vect 8 (Bit,Nat)) ->
                 (f:Bit -> Bit -> Bit) ->
-                (p:allHasCount a (S Z)
-                  =
-                True) ->
-                snd (foldr1 (addCount f) a)
-                  =
-                15
+                (p:allHasCount a (S Z) = True) ->
+                snd $ foldr1 (addCount f) a = 15
 -- The below proof is definitely true, but at the moment type-checking it could
 --   quite possibly take a bit longer than the age of the universe. Thanks
 --   combinatorial explosion.
 -- FIXME: make this work
 -- foldrHomoByte [(a,(S Z)),(b,(S Z)),(c,(S Z)),(d,(S Z)),(e,(S Z)),(f,(S Z)),
 --                (g,(S Z)),(h,(S Z))] i p = Refl
-foldrHomoByte a f = believe_me
+foldrHomoByte _ _ = believe_me
 
 -- This just says that if you zip two vectors togeter and then fold across them,
 --   (and they're both size 8) then 15 operations will be performed.
@@ -285,12 +274,11 @@ zfBasic : (a,b:Byte) ->
           snd $ foldr1 (addCount f) $ zipWith (addCount g)
                                               (initializeCount a)
                                               (initializeCount b)
-            =
-          15
+          = 15
 zfBasic a b f g =
   rewrite foldrHomoByte
             (zipWith (addCount g) (initializeCount a) (initializeCount b)) f
-                (zipOps a b g)
+            (zipOps a b g)
   in Refl
 
 -- This says equality always takes 15 operations
@@ -305,9 +293,7 @@ numericTimeConstancyOfEq a b = rewrite zfBasic a b bitNXor bitAnd in Refl
 --   time.
 
 timeConstancyOfEq : (a,b,c,d:Byte) ->
-                    snd (countingByteEq a b)
-                      =
-                    snd (countingByteEq c d)
+                    snd $ countingByteEq a b = snd $ countingByteEq c d
 timeConstancyOfEq a b c d =
      rewrite numericTimeConstancyOfEq a b
   in rewrite numericTimeConstancyOfEq c d

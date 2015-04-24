@@ -89,8 +89,7 @@ byteEq = zipAndFold bitNXor bitAnd
 
 initializeCount : Vect n a ->     -- Vector of something
                   Vect n (a, Nat) -- Vector of (something, operation count)
-initializeCount []        = []
-initializeCount (x :: xs) = (x, 0) :: initializeCount xs
+initializeCount = map $ \x => (x, Z)
 
 -- This takes a function and makes it a function that counts operations.
 
@@ -119,7 +118,7 @@ countingByteEq a b = zipAndFold (addCount bitNXor)
 allHasCount : Vect n (a, Nat) ->
               Nat ->
               Bool
-allHasCount []             n = True
+allHasCount []             _ = True
 allHasCount ((_, a) :: xs) n = a == n && allHasCount xs n
 
 -- This says that zipping two new vectors together should return a vector of
@@ -131,7 +130,7 @@ zipOps : (a, b : Vect n c) ->
                               (initializeCount a)
                               (initializeCount b)) 1 = True
 zipOps []        []        = \_ => Refl
-zipOps (x :: xs) (y :: ys) = zipOps xs ys
+zipOps (_ :: xs) (_ :: ys) = zipOps xs ys
 
 -- This is just the definition of addcount, namely operating on two things will
 --   return a thing with an operation count of the sum of theirs plus one.

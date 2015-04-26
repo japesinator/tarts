@@ -129,7 +129,7 @@ zipOps : (a, b : Vect n c) ->
          allHasCount (zipWith (addCount f)
                               (initializeCount a)
                               (initializeCount b)) 1 = True
-zipOps []        []        = \_ => Refl
+zipOps []        []        = const Refl
 zipOps (_ :: xs) (_ :: ys) = zipOps xs ys
 
 -- This is just the definition of addcount, namely operating on two things will
@@ -138,7 +138,7 @@ zipOps (_ :: xs) (_ :: ys) = zipOps xs ys
 addCountBasic : (f : c -> c -> c) ->
                 (a, b : (c, Nat)) ->
                 snd $ (addCount f) a b = snd a + snd b + 1
-addCountBasic _ (_, n) (_, m) = Refl
+addCountBasic _ (_, _) (_, _) = Refl
 
 -- This is where things get ugly.  Idris doesn't really like proving things
 --   about generalized folds, so I just wrote one huge proof for only 8-element

@@ -72,7 +72,9 @@ instance Num (Fin n) where
 addBytes : Byte ->
            Byte ->
            Byte
-addBytes a b = map fst $ zipWith3 fullAdder a b $ map (carry . fromInteger) $ fromList $ enumFromTo 0 7 where
+addBytes a b = map fst $ zipWith3 fullAdder a b
+             $ map (carry . fromInteger) $ fromList $ enumFromTo 0 7 where
   carry : Fin 8 -> Bit
   carry FZ     = Zero
-  carry (FS k) = snd $ fullAdder (index (FS k) a) (index (FS k) b) $ carry $ weaken k
+  carry (FS k) = snd $ fullAdder (index (FS k) a)
+                                 (index (FS k) b) $ carry $ weaken k

@@ -1,0 +1,6 @@
+package tarts
+
+sourcedir = src
+
+modules = Timing.Addition
+        , Timing.Equality

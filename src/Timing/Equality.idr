@@ -1,4 +1,4 @@
-module Equality
+module Timing.Equality
 
 import Data.Vect
 

@@ -78,7 +78,7 @@ zipAndFold f g a b = foldr1 f $ zipWith g a b
 byteEq : Byte ->
          Byte ->
          Bit -- One of the vectors are equal, otherwise Zero
-byteEq = zipAndFold bitNXor bitAnd
+byteEq = zipAndFold bitAnd bitNXor
 
 -- Now we get into the idea of using a tuple of (Bit, Nat) to represent both a
 --   bit and the number of operations done to produce it.
@@ -109,8 +109,8 @@ addCount f (a, n) (b, m) = (f a b, n + m + 1)
 countingByteEq : Byte ->
                  Byte ->
                  (Bit, Nat)
-countingByteEq a b = zipAndFold (addCount bitNXor)
-                                (addCount bitAnd)
+countingByteEq a b = zipAndFold (addCount bitAnd)
+                                (addCount bitNXor)
                                 (initializeCount a)
                                 (initializeCount b)
 
@@ -248,7 +248,7 @@ zfBasic f g a b = foldrHomoByte (zipWith (addCount g)
 
 numericTimeConstancyOfEq : (a, b : Byte) ->
                            snd $ countingByteEq a b = 15
-numericTimeConstancyOfEq = zfBasic bitNXor bitAnd
+numericTimeConstancyOfEq = zfBasic bitAnd bitNXor
 
 -- And thus equality between any two pairs of bytes takes the same amount of
 --   time.

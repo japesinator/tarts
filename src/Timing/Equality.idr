@@ -91,6 +91,11 @@ initializeCount : Vect n a ->     -- Vector of something
                   Vect n (a, Nat) -- Vector of (something, operation count)
 initializeCount = map $ \x => (x, Z)
 
+-- This is for readibility
+
+time : (a, Nat) -> Nat
+time = snd
+
 -- This takes a function and makes it a function that counts operations.
 
 addCount : (a -> a -> a) ->
@@ -249,7 +254,7 @@ numericTimeConstancyOfEq = zfBasic bitNXor bitAnd
 --   time.
 
 timeConstancyOfEq : (a, b, c, d : Byte) ->
-                    snd $ countingByteEq a b = snd $ countingByteEq c d
+                    time $ countingByteEq a b = time $ countingByteEq c d
 timeConstancyOfEq a b c d = rewrite numericTimeConstancyOfEq a b in
                             rewrite numericTimeConstancyOfEq c d in Refl -- QED
 

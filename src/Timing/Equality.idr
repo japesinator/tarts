@@ -159,45 +159,45 @@ addEightThings : (a, b, c, d, e, f, g, h : Nat) ->
                    1) 1
                  = plus (plus a $ plus b $ plus c $ plus d $ plus e $ plus f
                      $ plus g $ plus h 0) (fromInteger 7)
-addEightThings a b c d e f g h = ?aet
---   rewrite plusZeroRightNeutral h in
---   rewrite plusCommutative (plus h a) 1 in
---   rewrite plusCommutative g (S $ plus h a) in
---   rewrite plusCommutative (S $ plus (plus h a) g) 1 in
---   rewrite plusCommutative f (S $ S $ plus (plus h a) g) in
---   rewrite plusCommutative (plus (S $ S $ plus (plus h a) g) f) 1 in
---   rewrite plusCommutative e (S $ S $ S $ plus (plus (plus h a) g) f) in
---   rewrite plusCommutative (plus (S $ S $ S $ plus (plus (plus h a) g) f) e) 1 in
---   rewrite plusCommutative d (S $ S $ S $ S $
---     plus (plus (plus (plus h a) g) f) e) in
---   rewrite plusCommutative (plus (S $ S $ S $ S $
---     plus (plus (plus (plus h a) g) f) e) d) 1 in
---   rewrite plusCommutative c (S $ S $ S $ S $ S $
---     plus (plus (plus (plus (plus h a) g) f) e) d) in
---   rewrite plusCommutative (plus (S $ S $ S $ S $ S $
---     plus (plus (plus (plus (plus h a) g) f) e) d) c) 1 in
---   rewrite plusCommutative b (S $ S $ S $ S $ S $ S $
---     plus (plus (plus (plus (plus (plus h a) g) f) e) d) c) in
---   rewrite plusCommutative (plus (S $ S $ S $ S $ S $ S $
---     plus (plus (plus (plus (plus (plus h a) g) f) e) d) c) b) 1 in
---   rewrite plusCommutative (plus h a) g in
---   rewrite plusAssociative g h a in
---   rewrite plusCommutative (plus (plus g h) a) f in
---   rewrite plusAssociative f (plus g h) a in
---   rewrite plusCommutative (plus (plus f $ plus g h) a) e in
---   rewrite plusAssociative e (plus f $ plus g h) a in
---   rewrite plusCommutative (plus (plus e $ plus f $ plus g h) a) d in
---   rewrite plusAssociative d (plus e $ plus f $ plus g h) a in
---   rewrite plusCommutative (plus (plus d $ plus e $ plus f $ plus g h) a) c in
---   rewrite plusAssociative c (plus d $ plus e $ plus f $ plus g h) a in
---   rewrite plusCommutative (plus (plus c $ plus d $ plus e $
---     plus f $ plus g h) a) b in
---   rewrite plusAssociative b (plus c $ plus d $ plus e $ plus f $ plus g h) a in
---   rewrite plusCommutative (plus b $ plus c $ plus d $
---     plus e $ plus f $ plus g h) a in
---   rewrite plusCommutative (plus a $ plus b $ plus c $ plus d $
---     plus e $ plus f $ plus g h) 7 in Refl
---    -- FIXME: dear god I am sorry for the above
+addEightThings a b c d e f g h =
+  rewrite plusZeroRightNeutral h in
+  rewrite plusCommutative (plus h a) 1 in
+  rewrite plusCommutative g (S $ plus h a) in
+  rewrite plusCommutative (S $ plus (plus h a) g) 1 in
+  rewrite plusCommutative f (S $ S $ plus (plus h a) g) in
+  rewrite plusCommutative (plus (S $ S $ plus (plus h a) g) f) 1 in
+  rewrite plusCommutative e (S $ S $ S $ plus (plus (plus h a) g) f) in
+  rewrite plusCommutative (plus (S $ S $ S $ plus (plus (plus h a) g) f) e) 1 in
+  rewrite plusCommutative d (S $ S $ S $ S $
+    plus (plus (plus (plus h a) g) f) e) in
+  rewrite plusCommutative (plus (S $ S $ S $ S $
+    plus (plus (plus (plus h a) g) f) e) d) 1 in
+  rewrite plusCommutative c (S $ S $ S $ S $ S $
+    plus (plus (plus (plus (plus h a) g) f) e) d) in
+  rewrite plusCommutative (plus (S $ S $ S $ S $ S $
+    plus (plus (plus (plus (plus h a) g) f) e) d) c) 1 in
+  rewrite plusCommutative b (S $ S $ S $ S $ S $ S $
+    plus (plus (plus (plus (plus (plus h a) g) f) e) d) c) in
+  rewrite plusCommutative (plus (S $ S $ S $ S $ S $ S $
+    plus (plus (plus (plus (plus (plus h a) g) f) e) d) c) b) 1 in
+  rewrite plusCommutative (plus h a) g in
+  rewrite plusAssociative g h a in
+  rewrite plusCommutative (plus (plus g h) a) f in
+  rewrite plusAssociative f (plus g h) a in
+  rewrite plusCommutative (plus (plus f $ plus g h) a) e in
+  rewrite plusAssociative e (plus f $ plus g h) a in
+  rewrite plusCommutative (plus (plus e $ plus f $ plus g h) a) d in
+  rewrite plusAssociative d (plus e $ plus f $ plus g h) a in
+  rewrite plusCommutative (plus (plus d $ plus e $ plus f $ plus g h) a) c in
+  rewrite plusAssociative c (plus d $ plus e $ plus f $ plus g h) a in
+  rewrite plusCommutative (plus (plus c $ plus d $ plus e $
+    plus f $ plus g h) a) b in
+  rewrite plusAssociative b (plus c $ plus d $ plus e $ plus f $ plus g h) a in
+  rewrite plusCommutative (plus b $ plus c $ plus d $
+    plus e $ plus f $ plus g h) a in
+  rewrite plusCommutative (plus a $ plus b $ plus c $ plus d $
+    plus e $ plus f $ plus g h) 7 in Refl
+   -- FIXME: dear god I am sorry for the above
 
 -- This states that folding an operation across a vector will perform seven
 --   operations (for each adjacent pair in the vector), and so the sum of the
